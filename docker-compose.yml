@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  db:   # Servicio de base de datos
+    image: postgres:15                  # Imagen oficial de Postgres
+    container_name: postgres_curso      # Nombre del contenedor
+    environment:                        # Variables de entorno
+      POSTGRES_USER: postgres           # Usuario por defecto
+      POSTGRES_PASSWORD: postgres       # Contraseña
+      POSTGRES_DB: netflix       # Base de datos inicial
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.utf8"
+    ports:
+      - "5435:5432"                     # Puerto host:contenedor
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persistencia de datos
+      - ./init:/docker-entrypoint-initdb.d # Ejecuta .sql al inicio
+      - ./backups:/backups              # Carpeta compartida
+    restart: always                     # Se reinicia si falla
+    networks:
+      - dbnet                           # Red interna
+
+  pgadmin: # Servicio de pgAdmin
+    image: dpage/pgadmin4:latest        # Imagen oficial
+    container_name: pgadmin_curso
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com  # Usuario de pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin           # Contraseña
+    ports:
+      - "8080:80"                       # Exponer interfaz web
+    depends_on:
+      - db                              # Se arranca después de db
+    restart: always
+    networks:
+      - dbnet
+
+volumes:
+  pgdata: # Volumen nombrado para persistir Postgres
+
+networks:
+  dbnet:  # Red puente entre los dos servicios
+    driver: bridge
